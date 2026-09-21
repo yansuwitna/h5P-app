@@ -1,19 +1,19 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
-const auth = page.props.auth || {};
-const user = auth.user || {};
-const role = auth.role || user.role || 'student';
+const auth = computed(() => page.props.auth || {});
+const user = computed(() => auth.value.user || {});
+const role = computed(() => auth.value.role || user.value.role || 'student');
 
 const sidebarOpen = ref(false);
 const sidebarExpanded = ref(true);
 const dropdownOpen = ref(false);
 const isDark = ref(false);
 
-const roleBadge = role === 'admin' ? 'Administrator' : (role === 'teacher' ? 'Tenaga Pendidik' : 'Siswa Aktif');
-const roleDot = role === 'admin' ? 'bg-rose-500' : (role === 'teacher' ? 'bg-indigo-500' : 'bg-emerald-500');
+const roleBadge = computed(() => role.value === 'admin' ? 'Administrator' : (role.value === 'teacher' ? 'Tenaga Pendidik' : 'Siswa Aktif'));
+const roleDot = computed(() => role.value === 'admin' ? 'bg-rose-500' : (role.value === 'teacher' ? 'bg-indigo-500' : 'bg-emerald-500'));
 
 const toggleTheme = () => {
     if (document.documentElement.classList.contains('dark')) {
@@ -247,7 +247,7 @@ const isUrl = (url) => window.location.pathname === url;
                             </button>
 
                             <!-- Dropdown Menu -->
-                            <div v-show="dropdownOpen" @click.outside="dropdownOpen = false" class="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 dark:border-[#2e3a4b] bg-white dark:bg-[#1c2434] p-2 shadow-xl z-50 text-xs">
+                            <div v-show="dropdownOpen" class="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 dark:border-[#2e3a4b] bg-white dark:bg-[#1c2434] p-2 shadow-xl z-50 text-xs">
                                 <div class="p-3 border-b border-slate-100 dark:border-[#2e3a4b]">
                                     <p class="font-bold text-slate-900 dark:text-white truncate">{{ user?.name }}</p>
                                     <p class="text-[11px] text-slate-400 font-mono truncate">{{ user?.email ?? (user?.nik ?? user?.nisn) }}</p>

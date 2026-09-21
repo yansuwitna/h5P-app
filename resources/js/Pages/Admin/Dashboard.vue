@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
@@ -9,8 +10,8 @@ const props = defineProps({
 });
 
 const page = usePage();
-const auth = page.props.auth || {};
-const user = auth.user || {};
+const auth = computed(() => page.props.auth || {});
+const user = computed(() => auth.value.user || {});
 </script>
 
 <template>
