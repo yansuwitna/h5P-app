@@ -11,7 +11,7 @@ Route::get('/', function () {
     $totalMateri = \App\Models\MateriH5p::count();
     $totalGuru = \App\Models\Guru::count();
     $totalSiswa = \App\Models\Siswa::count();
-    return view('welcome', compact('settings', 'totalMateri', 'totalGuru', 'totalSiswa'));
+    return \Inertia\Inertia::render('Welcome', compact('settings', 'totalMateri', 'totalGuru', 'totalSiswa'));
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Panel Admin & Sub-halaman Terpisah
     Route::get('/admin', [BerandaController::class, 'adminDashboard'])->name('admin.dashboard');
     Route::get('/admin/guru', [BerandaController::class, 'adminGuru'])->name('admin.guru');
+    Route::get('/admin/materi', [BerandaController::class, 'adminMateri'])->name('admin.materi');
     Route::get('/admin/siswa', [BerandaController::class, 'adminSiswa'])->name('admin.siswa');
     Route::get('/admin/cms', [BerandaController::class, 'adminCms'])->name('admin.cms');
     

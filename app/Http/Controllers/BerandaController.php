@@ -37,9 +37,7 @@ class BerandaController extends Controller
         $totalGuru = Guru::count();
         $totalSiswa = Siswa::count();
         $totalMateri = MateriH5p::count();
-        $daftarGuru = Guru::latest()->take(5)->get();
-        $daftarSiswa = Siswa::latest()->take(5)->get();
-        return view('dashboard.admin', compact('totalGuru', 'totalSiswa', 'totalMateri', 'daftarGuru', 'daftarSiswa'));
+        return \Inertia\Inertia::render('Admin/Dashboard', compact('totalGuru', 'totalSiswa', 'totalMateri'));
     }
 
     public function adminGuru()
@@ -48,7 +46,16 @@ class BerandaController extends Controller
         if ($role !== 'admin') return $this->redirectByRole();
 
         $daftarGuru = Guru::latest()->get();
-        return view('admin.guru', compact('daftarGuru'));
+        return \Inertia\Inertia::render('Admin/Guru', compact('daftarGuru'));
+    }
+
+    public function adminMateri()
+    {
+        $role = session('role', Auth::user()->role ?? 'student');
+        if ($role !== 'admin') return $this->redirectByRole();
+
+        $daftarMateri = MateriH5p::with('guru')->latest()->get();
+        return \Inertia\Inertia::render('Admin/Materi', compact('daftarMateri'));
     }
 
     public function adminSiswa()
@@ -57,7 +64,7 @@ class BerandaController extends Controller
         if ($role !== 'admin') return $this->redirectByRole();
 
         $daftarSiswa = Siswa::latest()->get();
-        return view('admin.siswa', compact('daftarSiswa'));
+        return \Inertia\Inertia::render('Admin/Siswa', compact('daftarSiswa'));
     }
 
     public function adminCms()
@@ -66,7 +73,7 @@ class BerandaController extends Controller
         if ($role !== 'admin') return $this->redirectByRole();
 
         $landingSettings = \App\Models\LandingSetting::getAllSettings();
-        return view('admin.cms', compact('landingSettings'));
+        return \Inertia\Inertia::render('Admin/Cms', compact('landingSettings'));
     }
 
     public function guruDashboard()
@@ -79,7 +86,7 @@ class BerandaController extends Controller
         $pengguna = Auth::user();
         $siswa = Siswa::all();
         $materi = MateriH5p::where('guru_id', $pengguna->id)->get();
-        return view('dashboard.teacher', compact('siswa', 'materi'));
+        return \Inertia\Inertia::render('Guru/Dashboard', compact('siswa', 'materi'));
     }
 
     public function guruSiswa()
@@ -88,7 +95,7 @@ class BerandaController extends Controller
         if ($role !== 'teacher') return $this->redirectByRole();
 
         $siswa = Siswa::all();
-        return view('guru.siswa', compact('siswa'));
+        return \Inertia\Inertia::render('Guru/Siswa', compact('siswa'));
     }
 
     public function guruMateri()
@@ -98,7 +105,7 @@ class BerandaController extends Controller
 
         $pengguna = Auth::user();
         $materi = MateriH5p::where('guru_id', $pengguna->id)->get();
-        return view('guru.materi', compact('materi'));
+        return \Inertia\Inertia::render('Guru/Materi', compact('materi'));
     }
 
     public function siswaDashboard()
@@ -111,7 +118,7 @@ class BerandaController extends Controller
         $pengguna = Auth::user();
         $materi = MateriH5p::all();
         $nilai = Nilai::where('siswa_id', $pengguna->id)->with('materi')->get();
-        return view('dashboard.student', compact('materi', 'nilai'));
+        return \Inertia\Inertia::render('Siswa/Dashboard', compact('materi', 'nilai'));
     }
 
     public function siswaMateri()
@@ -122,7 +129,7 @@ class BerandaController extends Controller
         $pengguna = Auth::user();
         $materi = MateriH5p::all();
         $nilai = Nilai::where('siswa_id', $pengguna->id)->get();
-        return view('siswa.materi', compact('materi', 'nilai'));
+        return \Inertia\Inertia::render('Siswa/Materi', compact('materi', 'nilai'));
     }
 
     public function siswaRapor()
@@ -132,7 +139,7 @@ class BerandaController extends Controller
 
         $pengguna = Auth::user();
         $nilai = Nilai::where('siswa_id', $pengguna->id)->with('materi')->get();
-        return view('siswa.rapor', compact('nilai'));
+        return \Inertia\Inertia::render('Siswa/Rapor', compact('nilai'));
     }
 
     public function updateLandingSettings(Request $request)

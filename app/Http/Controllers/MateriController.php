@@ -59,7 +59,7 @@ class MateriController extends Controller
             }
         }
 
-        return view('h5p.play', compact('materi', 'urlPublik'));
+        return \Inertia\Inertia::render('H5p/Play', compact('materi', 'urlPublik'));
     }
 
     public function simpanNilai(Request $request)

@@ -17,20 +17,22 @@ class H5pAppTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('Fitur Unggulan');
-        $response->assertSee('Alur Kerja');
-        $response->assertSee('Standar Penilaian');
-        $response->assertSee('Materi Interaktif');
-        $response->assertSee('Tenaga Pengajar');
-        $response->assertSee('Peserta Didik');
+        $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->component('Welcome')
+            ->has('settings')
+            ->has('totalMateri')
+            ->has('totalGuru')
+            ->has('totalSiswa')
+        );
     }
 
     public function test_halaman_login_bisa_diakses(): void
     {
         $response = $this->get('/login');
         $response->assertStatus(200);
-        $response->assertSee('Portal Masuk Terpadu');
-        $response->assertSee('Username / NIK / NISN');
+        $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->component('Auth/Login')
+        );
     }
 
     public function test_multi_table_login_admin(): void
@@ -51,7 +53,12 @@ class H5pAppTest extends TestCase
         // Pastikan halaman /admin dapat diakses dengan sukses
         $adminPage = $this->get('/admin');
         $adminPage->assertStatus(200);
-        $adminPage->assertSee('Panel Utama Administrator');
+        $adminPage->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->component('Admin/Dashboard')
+            ->has('totalGuru')
+            ->has('totalSiswa')
+            ->has('totalMateri')
+        );
     }
 
     public function test_multi_table_login_guru_nik(): void
@@ -72,7 +79,11 @@ class H5pAppTest extends TestCase
         // Pastikan halaman /guru dapat diakses dengan sukses
         $guruPage = $this->get('/guru');
         $guruPage->assertStatus(200);
-        $guruPage->assertSee('Panel Pengelolaan Guru');
+        $guruPage->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->component('Guru/Dashboard')
+            ->has('siswa')
+            ->has('materi')
+        );
     }
 
     public function test_multi_table_login_siswa_nisn(): void
@@ -93,7 +104,11 @@ class H5pAppTest extends TestCase
         // Pastikan halaman /siswa dapat diakses dengan sukses
         $siswaPage = $this->get('/siswa');
         $siswaPage->assertStatus(200);
-        $siswaPage->assertSee('Ruang Belajar Siswa Mandiri');
+        $siswaPage->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->component('Siswa/Dashboard')
+            ->has('materi')
+            ->has('nilai')
+        );
     }
 
     public function test_login_gagal_jika_tidak_ada_di_semua_tabel(): void
@@ -120,10 +135,13 @@ class H5pAppTest extends TestCase
         $this->assertEquals('CustomBrand', \App\Models\LandingSetting::getVal('brand_name'));
         $this->assertEquals('Judul Kustom Dari Admin', \App\Models\LandingSetting::getVal('hero_title'));
 
-        // Cek halaman depan
+        // Cek halaman depan props via Inertia
         $landingResponse = $this->get('/');
-        $landingResponse->assertSee('CustomBrand');
-        $landingResponse->assertSee('Judul Kustom Dari Admin');
+        $landingResponse->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->component('Welcome')
+            ->where('settings.brand_name', 'CustomBrand')
+            ->where('settings.hero_title', 'Judul Kustom Dari Admin')
+        );
     }
 
     public function test_admin_bisa_import_guru_dan_siswa_via_excel_csv(): void
@@ -179,24 +197,25 @@ class H5pAppTest extends TestCase
     {
         $admin = Admin::where('username', 'admin')->first();
 
-        $this->actingAs($admin, 'admin')->get('/admin/guru')->assertStatus(200)->assertSee('Data Guru Terdaftar');
-        $this->actingAs($admin, 'admin')->get('/admin/siswa')->assertStatus(200)->assertSee('Data Siswa Terdaftar');
-        $this->actingAs($admin, 'admin')->get('/admin/cms')->assertStatus(200)->assertSee('Pengaturan Teks Landing Page');
+        $this->actingAs($admin, 'admin')->get('/admin/guru')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Admin/Guru')->has('daftarGuru'));
+        $this->actingAs($admin, 'admin')->get('/admin/materi')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Admin/Materi')->has('daftarMateri'));
+        $this->actingAs($admin, 'admin')->get('/admin/siswa')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Admin/Siswa')->has('daftarSiswa'));
+        $this->actingAs($admin, 'admin')->get('/admin/cms')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Admin/Cms')->has('landingSettings'));
     }
 
     public function test_dedicated_pages_guru_dapat_diakses(): void
     {
         $guru = Guru::first();
 
-        $this->actingAs($guru, 'guru')->get('/guru/siswa')->assertStatus(200)->assertSee('Daftar Siswa Kelas Aktif');
-        $this->actingAs($guru, 'guru')->get('/guru/materi')->assertStatus(200)->assertSee('Unggah Modul H5P');
+        $this->actingAs($guru, 'guru')->get('/guru/siswa')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Guru/Siswa')->has('siswa'));
+        $this->actingAs($guru, 'guru')->get('/guru/materi')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Guru/Materi')->has('materi'));
     }
 
     public function test_dedicated_pages_siswa_dapat_diakses(): void
     {
         $siswa = Siswa::first();
 
-        $this->actingAs($siswa, 'siswa')->get('/siswa/materi')->assertStatus(200)->assertSee('Daftar Materi Interaktif H5P');
-        $this->actingAs($siswa, 'siswa')->get('/siswa/rapor')->assertStatus(200)->assertSee('Lencana Prestasi');
+        $this->actingAs($siswa, 'siswa')->get('/siswa/materi')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Siswa/Materi')->has('materi'));
+        $this->actingAs($siswa, 'siswa')->get('/siswa/rapor')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Siswa/Rapor')->has('nilai'));
     }
 }
