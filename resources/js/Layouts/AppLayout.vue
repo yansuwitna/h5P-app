@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
+import notify from '@/Utils/sweetalert';
 
 const page = usePage();
 const auth = computed(() => page.props.auth || {});
@@ -28,8 +29,26 @@ const toggleTheme = () => {
 };
 
 const logout = () => {
-    router.post('/logout');
+    notify.confirm('Keluar dari Sesi?', 'Anda akan dialihkan kembali ke halaman utama portal.', 'Ya, Keluar', 'question')
+        .then((result) => {
+            if (result.isConfirmed) {
+                router.post('/logout');
+            }
+        });
 };
+
+// Monitor Flash Messages from Backend and display with SweetAlert2
+watch(() => page.props.flash, (flash) => {
+    if (flash?.sukses) {
+        notify.success('Berhasil!', flash.sukses);
+    }
+    if (flash?.error) {
+        notify.error('Terjadi Kesalahan!', flash.error);
+    }
+    if (flash?.status) {
+        notify.info('Informasi', flash.status);
+    }
+}, { deep: true, immediate: true });
 
 onMounted(() => {
     isDark.value = document.documentElement.classList.contains('dark');
@@ -270,19 +289,7 @@ const isUrl = (url) => window.location.pathname === url;
 
             <!-- Main Page Content -->
             <main class="p-4 sm:p-6 lg:p-8 flex-1">
-                <!-- Flash Notification Banner -->
-                <div v-if="$page.props.flash?.sukses" class="mb-5 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span>✅</span>
-                        <span>{{ $page.props.flash.sukses }}</span>
-                    </div>
-                </div>
-                <div v-if="$page.props.flash?.error" class="mb-5 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-800 dark:text-rose-200 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span>⚠️</span>
-                        <span>{{ $page.props.flash.error }}</span>
-                    </div>
-                </div>
+
 
                 <slot />
             </main>

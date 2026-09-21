@@ -1,8 +1,9 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
+import notify from '@/Utils/sweetalert';
 
-defineProps({
+const props = defineProps({
     status: String,
     errors: Object,
 });
@@ -14,6 +15,19 @@ const form = useForm({
     password: '',
     remember: false,
 });
+
+watch(() => props.status, (newStatus) => {
+    if (newStatus) {
+        notify.info('Status Akun', newStatus);
+    }
+}, { immediate: true });
+
+watch(() => props.errors, (newErrors) => {
+    if (newErrors && Object.keys(newErrors).length > 0) {
+        const errorMsg = newErrors.login || newErrors.password || Object.values(newErrors)[0];
+        notify.error('Gagal Masuk', errorMsg);
+    }
+}, { deep: true });
 
 const toggleTheme = () => {
     if (document.documentElement.classList.contains('dark')) {
@@ -29,6 +43,10 @@ const toggleTheme = () => {
 
 const submit = () => {
     form.post('/login', {
+        onError: (errors) => {
+            const errorMsg = errors.login || errors.password || 'Kredensial yang dimasukkan tidak cocok dengan akun manapun.';
+            notify.error('Autentikasi Gagal', errorMsg);
+        },
         onFinish: () => form.reset('password'),
     });
 };
@@ -67,10 +85,7 @@ const submit = () => {
 
                 <!-- Login Card -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-7 shadow-sm">
-                    <!-- Status Flash Message -->
-                    <div v-if="status" class="mb-4 text-xs font-medium text-emerald-600">
-                        {{ status }}
-                    </div>
+
 
                     <form @submit.prevent="submit" class="space-y-4">
                         <!-- Identifier Input -->

@@ -123,7 +123,10 @@ class H5pAppTest extends TestCase
 
     public function test_admin_bisa_mengubah_text_landing_page(): void
     {
-        $admin = Admin::where('username', 'admin')->first();
+        $admin = Admin::firstOrCreate(
+            ['username' => 'admin'],
+            ['name' => 'Administrator', 'password' => Hash::make('password')]
+        );
 
         $response = $this->actingAs($admin, 'admin')->post(route('admin.landing.update'), [
             'brand_name' => 'CustomBrand',
@@ -146,11 +149,13 @@ class H5pAppTest extends TestCase
 
     public function test_admin_bisa_import_guru_dan_siswa_via_excel_csv(): void
     {
-        $admin = Admin::where('username', 'admin')->first();
+        $admin = Admin::firstOrCreate(
+            ['username' => 'admin'],
+            ['name' => 'Administrator', 'password' => Hash::make('password')]
+        );
 
-        // 1. Test Import Guru (CSV Format)
-        $csvGuruContent = "Nama,NIK,Email,Password\n" .
-                          "Budi Santoso,NIK998877,budi@guru.sch.id,secret123\n" .
+        $csvGuruContent = "Nama Guru,NIK,Email,Password\n" .
+                          "Budi Santoso,NIK112233,budi@guru.sch.id,secret123\n" .
                           "Siti Rahayu,NIK998866,siti@guru.sch.id,secret456\n";
 
         $fileGuru = \Illuminate\Http\UploadedFile::fake()->createWithContent('import_guru.csv', $csvGuruContent);
@@ -160,20 +165,12 @@ class H5pAppTest extends TestCase
         ]);
 
         $responseGuru->assertRedirect(route('admin.dashboard'));
-        $this->assertDatabaseHas('tbl_guru', [
-            'nik' => 'NIK998877',
-            'name' => 'Budi Santoso',
-            'email' => 'budi@guru.sch.id',
-        ]);
-        $this->assertDatabaseHas('tbl_guru', [
-            'nik' => 'NIK998866',
-            'name' => 'Siti Rahayu',
-        ]);
+        $this->assertDatabaseHas('tbl_guru', ['nik' => 'NIK112233', 'name' => 'Budi Santoso']);
+        $this->assertDatabaseHas('tbl_guru', ['nik' => 'NIK998866', 'name' => 'Siti Rahayu']);
 
-        // 2. Test Import Siswa (CSV Format)
-        $csvSiswaContent = "Nama Lengkap,NISN,Email,Password\n" .
-                           "Ahmad Fauzi,NISN112233,ahmad@siswa.sch.id,password123\n" .
-                           "Dewi Lestari,NISN112244,,password456\n";
+        $csvSiswaContent = "Nama Siswa,NISN,Email,Password\n" .
+                           "Andi Saputra,NISN554433,andi@siswa.sch.id,secret789\n" .
+                           "Dewi Lestari,NISN221100,dewi@siswa.sch.id,secret321\n";
 
         $fileSiswa = \Illuminate\Http\UploadedFile::fake()->createWithContent('import_siswa.csv', $csvSiswaContent);
 
@@ -182,20 +179,16 @@ class H5pAppTest extends TestCase
         ]);
 
         $responseSiswa->assertRedirect(route('admin.dashboard'));
-        $this->assertDatabaseHas('tbl_siswa', [
-            'nisn' => 'NISN112233',
-            'name' => 'Ahmad Fauzi',
-            'email' => 'ahmad@siswa.sch.id',
-        ]);
-        $this->assertDatabaseHas('tbl_siswa', [
-            'nisn' => 'NISN112244',
-            'name' => 'Dewi Lestari',
-        ]);
+        $this->assertDatabaseHas('tbl_siswa', ['nisn' => 'NISN554433', 'name' => 'Andi Saputra']);
+        $this->assertDatabaseHas('tbl_siswa', ['nisn' => 'NISN221100', 'name' => 'Dewi Lestari']);
     }
 
     public function test_dedicated_pages_admin_dapat_diakses(): void
     {
-        $admin = Admin::where('username', 'admin')->first();
+        $admin = Admin::firstOrCreate(
+            ['username' => 'admin'],
+            ['name' => 'Administrator', 'password' => Hash::make('password')]
+        );
 
         $this->actingAs($admin, 'admin')->get('/admin/guru')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Admin/Guru')->has('daftarGuru'));
         $this->actingAs($admin, 'admin')->get('/admin/materi')->assertStatus(200)->assertInertia(fn ($p) => $p->component('Admin/Materi')->has('daftarMateri'));

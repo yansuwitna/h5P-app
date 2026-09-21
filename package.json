@@ -21,6 +21,7 @@
     "dependencies": {
         "@inertiajs/vue3": "^3.7.1",
         "@vitejs/plugin-vue": "^6.0.9",
+        "sweetalert2": "^11.26.25",
         "vue": "^3.5.43"
     }
 }
